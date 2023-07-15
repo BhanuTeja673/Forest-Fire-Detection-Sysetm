@@ -1,0 +1,69 @@
+#include<ESP8266WiFi.h>
+#include<WiFiClient.h>
+#include<ESP8266WebServer.h>
+#include <ThingSpeak.h>
+#include <ArduinoJson.h>
+const char* ssid = "realmeX75G";
+const char* password = "12345678";
+WiFiClient client;
+
+unsigned long myChannelNumber = 1789061; //Your Channel Number (Without Brackets)
+
+const char * myWriteAPIKey = "AMG5KRLFONQUUWWS"; //Your Write API Key
+
+float data1, data2, data3,data4;
+int data7;
+long int data5,data6;
+void setup()
+{ Serial.begin(9600);
+  WiFi.begin(ssid, password);
+  ThingSpeak.begin(client);
+  while (WiFi.status() != WL_CONNECTED)
+  {
+    delay(500);
+    Serial.println("Not Connected.");
+  }
+
+}
+void loop()
+{
+  StaticJsonBuffer<1000> jsonBuffer;
+  JsonObject& root = jsonBuffer.parseObject(Serial);
+  if (root == JsonObject::invalid())
+  {
+    return;
+    Serial.println("invalid");
+  }
+  data1 = root["a1"];
+  data2 = root["a2"];
+  data3 = root["a3"];
+  data4 = root["a4"];
+  data5 = root["a5"];
+  data6 = root["a6"];
+  data7 = root["a7"];
+  Serial.println(data1);
+  Serial.println(data2);
+  Serial.println(data3);
+  Serial.println(data4);
+  Serial.println(data5);
+  Serial.println(data6);
+   Serial.println(data7);
+  ThingSpeak.setField(1, data1);//gas
+  ThingSpeak.setField(2, data2);//button
+  ThingSpeak.setField(3, data3);
+  ThingSpeak.setField(4, data4);
+  ThingSpeak.setField(5, data5);
+  ThingSpeak.setField(6, data6);
+  ThingSpeak.setField(7, data7);
+  // Write to ThingSpeak. There are up to 8 fields in a channel, allowing you to store up to 8 different
+  // pieces of information in a channel.  Here, we write to field 1.
+  int x = ThingSpeak.writeFields(myChannelNumber, myWriteAPIKey);//update data
+  if (x == 200) { //responese ok mean 200
+    Serial.println("Channel update successful.");
+  }
+  else {
+    Serial.println("Problem updating channel. HTTP error code " + String(x));
+  }
+  delay(20000);
+
+}

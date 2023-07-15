@@ -1,0 +1,80 @@
+#include <DHT.h>;
+#include <ArduinoJson.h>
+#include <SoftwareSerial.h>
+//Constants
+#define DHTPIN A2     // what pin we're connected to
+#define DHTTYPE DHT22   // DHT 22  (AM2302)
+DHT dht(DHTPIN, DHTTYPE); //// Initialize DHT sensor for normal 16mhz Arduino
+
+
+//Variables
+int chk;
+float hum;  //Stores humidity value
+float temp; //Stores temperature value
+int smokeA0 = A5;
+int sensorThreshold =200;
+#define flamePin A1
+int flame;
+long int lat;
+ long int lon;
+ int fire;
+
+void setup()
+{
+  pinMode(8,OUTPUT);
+  Serial.begin(9600);
+  dht.begin();
+  pinMode(smokeA0, INPUT);
+    pinMode(flamePin, INPUT);
+}
+StaticJsonBuffer<1000> jsonBuffer;
+JsonObject& root = jsonBuffer.createObject();
+void loop()
+{
+    
+    delay(2000);
+    
+    digitalWrite(8,HIGH);
+    //Read data and store it to variables hum and temp
+    Serial.println("latitude:21127732");
+   Serial.println("longitude:81764215");
+   lat = 21127732;
+   lon = 81764215;
+    hum = dht.readHumidity();
+    temp= dht.readTemperature();
+    //Print temp and humidity values to serial monitor
+    Serial.print("Humidity: ");
+    Serial.print(hum);
+    Serial.println(" % ");
+     Serial.print("  Temp: ");
+    Serial.print(temp);
+    Serial.println(" Celsius");
+    Serial.print(" Smoke :");
+    int analogSensor = analogRead(smokeA0);
+    Serial.println(analogSensor);
+    flame = digitalRead(flamePin); // read sensor data
+   Serial.print("Flame Sensor - "); // display data on the monitor
+   Serial.println(flame);
+// Checks if it has reached the threshold value
+if (analogSensor > sensorThreshold || temp>100 || flame==0)
+{
+Serial.print("Fire detected ");
+digitalWrite(8,LOW);
+fire = 1;
+}
+else
+{
+  fire = 0;
+Serial.println("Fire Not detected");
+}
+ root["a1"] = hum;
+  root["a2"] = temp;
+  root["a3"] = flame;
+    root["a4"] =analogSensor;
+    root["a5"] = lat;
+    root["a6"]=lon;
+    root["a7"]=fire;
+  root.printTo(Serial);
+  Serial.println("");
+    delay(2000); //Delay 2 sec.
+}
